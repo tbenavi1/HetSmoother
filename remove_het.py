@@ -3,6 +3,46 @@
 import re
 import sys
 
+def reverse_complement(kmer):
+  """
+  Assumes kmers are upper case, no Ns.
+  """
+  complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
+  return "".join(complement[base] for base in reversed(kmer))
+
+def prioritize_kmers(kmer1, kmer2):
+  """
+  Assumes kmers are the same size and are 1 SNP different.
+  """
+  for i in range(len(kmer1)):
+    if kmer1[i] != kmer2[i]:
+      assert kmer1[:i]+kmer1[i+1:]==kmer2[:i]+kmer2[i+1:]
+      break
+  window = -1
+  while True:
+    window += 1
+    flipped = False
+    A = kmer1[i-window:i+window+1]
+    B = kmer2[i-window:i+window+1]
+    if len(A) != 2*window+1:
+      return
+    if A > B:
+      flipped = True
+      A, B = B, A
+    A_rc = reverse_complement(A)
+    B_rc = reverse_complement(B)
+    if (A < B < B_rc < A_rc) or (A < B_rc < B < A_rc) or (A < B_rc == B < A_rc):
+      if flipped:
+        return (kmer1, kmer2)
+      else:
+        return (kmer2, kmer1)
+    if (B_rc < A < A_rc < B) or (B_rc < A_rc < A < B) or (B_rc < A == A_rc < B):
+      if flipped:
+        return (kmer2, kmer1)
+      else:
+        return (kmer1, kmer2)
+    assert A == B_rc < B == A_rc 
+
 #k=24 for beroe data
 k=21
 
@@ -13,7 +53,10 @@ print("Loading kmer pairs")
 with open(sys.argv[1], 'r') as file_kmer_pairs:
   for line in file_kmer_pairs:
     kmer1, kmer2 = line.strip().split('\t')
-    rep[kmer1] = kmer2
+    results = prioritize_kmers(kmer1, kmer2)
+    if results:
+      kmer1, kmer2 = results
+      rep[kmer1] = kmer2
 print("Kmer pairs loaded")
 
 #print(rep)
