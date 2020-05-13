@@ -1,5 +1,5 @@
-#remove_het.py takes an unzipped fastq file and a list of kmer pairs (k1 replaced as k2) as input. It reads in the list of kmers first. Then, it reads the fastq file line by line, if it finds k1 it replaces it with k2.
-#remove_het.py kmer_pairs.tsv input_reads.fastq output_reads.fastq
+#remove_het.py takes an unzipped fasta (single line per sequence) or fastq file and a list of kmer pairs as input. It reads in the list of kmers first and prioritizes which kmer to change. Then, it reads the fasta/fastq file line by line, if it finds first kmer it replaces it with second kmer. It also produces a text file which records how many changes were made for each read.
+#python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq replacements.txt
 import re
 import sys
 
@@ -46,6 +46,12 @@ def prioritize_kmers(kmer1, kmer2):
 #k=24 for beroe data
 k=21
 
+#change to 2 for single line multi fasta file, change to 4 for fastq file
+num_lines_per_read = 4
+
+#how often to update user about progress (1000 for long reads, 10000 for short reads)
+reads_per_set = 10000
+
 #make dictionary of replacements
 rep = dict()
 
@@ -73,15 +79,15 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
   set_replacements = 0
   set_reads_with_replacements = 0
   for i,line in enumerate(file_input_reads):
-    #If we've completed 1,000 reads (fasta file where each sequence is exactly on one line)
-    if i%2000==0: #i%4000==0 for 1,000 reads of fastq file
-      print(str(int(i/2))+ " reads have been analyzed") #str(int(i/4)) for fastq file
+    #If we've completed reads_per_set reads (fasta files need to have each sequence on exactly one line)
+    if i%(num_lines_per_read*reads_per_set)==0:
+      print(str(int(i/num_lines_per_read))+ " reads have been analyzed")
       print("this set: " + str(set_replacements) + " replacements have been made across " + str(set_reads_with_replacements) + " reads")
       print("running total: "+ str(total_replacements) + " replacements have been made across " + str(total_reads_with_replacements) + " reads")
       set_replacements = 0
       set_reads_with_replacements = 0
     #If this is the line with the read sequence
-    if i%2==1: #i%4==1 for fastq file
+    if i%num_lines_per_read==1:
       #line,n = pattern.subn(lambda m: rep[m.group(0)], line)
       read_len = len(line.strip())
       #n is the nubmber of replacements made for this read
@@ -97,6 +103,13 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
         if kmer1 in rep:
           read_replaced = True
           edited_read += rep[kmer1]
+          n += 1
+          set_replacements += 1
+          total_replacements += 1
+          j += k
+        elif reverse_complement(kmer1) in rep:
+          read_replaced = True
+          edited_read += reverse_complement(rep[reverse_complement(kmer1)])
           n += 1
           set_replacements += 1
           total_replacements += 1
