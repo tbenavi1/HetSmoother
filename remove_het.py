@@ -5,9 +5,9 @@ import sys
 
 def reverse_complement(kmer):
   """
-  Assumes kmers are upper case, no Ns.
+  Assumes kmers are upper case.
   """
-  complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
+  complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N'}
   return "".join(complement[base] for base in reversed(kmer))
 
 def prioritize_kmers(kmer1, kmer2):
@@ -44,7 +44,7 @@ def prioritize_kmers(kmer1, kmer2):
     assert A == B_rc < B == A_rc 
 
 #k=24 for beroe data
-k=21
+k=24
 
 #change to 2 for single line multi fasta file, change to 4 for fastq file
 num_lines_per_read = 4
