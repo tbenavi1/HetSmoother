@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 #remove_het.py takes an unzipped fasta (single line per sequence) or fastq file and a list of kmer pairs as input. It reads in the list of kmers first and prioritizes which kmer to change. Then, it reads the fasta/fastq file line by line, if it finds first kmer it replaces it with second kmer. It also produces a text file which records how many changes were made for each read.
-#python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq replacements.txt
+#python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq replacements.txt analysis.txt
 import re
 import sys
 from itertools import groupby
@@ -13,6 +14,12 @@ def reverse_complement(kmer):
   """
   complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N'}
   return "".join(complement[base] for base in reversed(kmer))
+
+def location_of_snp(kmer1):
+  kmer2 = rep[kmer1]
+  for i in range(len(kmer1)):
+    if kmer1[i] != kmer2[i]:
+      return i
 
 def prioritize_kmers(kmer1, kmer2):
   """
@@ -51,7 +58,7 @@ def prioritize_kmers(kmer1, kmer2):
 k=21
 
 #change to 2 for single line multi fasta file, change to 4 for fastq file
-num_lines_per_read = 2
+num_lines_per_read = 4
 
 #how often to update user about progress (1000 for long reads, 10000 for short reads)
 reads_per_set = 1000
@@ -77,7 +84,7 @@ print("Kmer pairs loaded")
 #print("pattern made")
 
 print("replacing reads")
-with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_output_reads, open(sys.argv[4], 'w') as file_output_numrep:
+with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_output_reads, open(sys.argv[4], 'w') as file_output_numrep, open(sys.argv[5], 'w') as file_output_analysis:
   total_replacements = 0
   total_reads_with_replacements = 0
   set_replacements = 0
@@ -102,22 +109,45 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
       read_replaced = False
       while j < read_len - k + 1:
         kmer1 = line[j:j+k]
-        #print(kmer1)
         #if need to make a replacement
         if kmer1 in rep:
-          read_replaced = True
-          edited_read += rep[kmer1]
-          n += 1
-          set_replacements += 1
-          total_replacements += 1
-          j += k
+          snp_location = location_of_snp(kmer1)
+          num_overlapping_kmers_in_rep = 0
+          for z in range(snp_location+1):
+            test_kmer = line[j+z:min(j+z+k,read_len)]
+            if test_kmer in rep or reverse_complement(test_kmer) in rep:
+              num_overlapping_kmers_in_rep += 1
+          file_output_analysis.write(str(num_overlapping_kmers_in_rep)+"\n")
+          #If greater than 50% of the k overlapping kmers are part of a kmer pair
+          if num_overlapping_kmers_in_rep/k > 0.5:
+            read_replaced = True
+            edited_read += rep[kmer1]
+            n += 1
+            set_replacements += 1
+            total_replacements += 1
+            j += k
+          else:
+            edited_read += line[j]
+            j += 1
         elif reverse_complement(kmer1) in rep:
-          read_replaced = True
-          edited_read += reverse_complement(rep[reverse_complement(kmer1)])
-          n += 1
-          set_replacements += 1
-          total_replacements += 1
-          j += k
+          snp_location = k-location_of_snp(reverse_complement(kmer1))-1
+          num_overlapping_kmers_in_rep = 0
+          for z in range(snp_location+1):
+            test_kmer = line[j+z:min(j+z+k,read_len)]
+            if test_kmer in rep or reverse_complement(test_kmer) in rep:
+              num_overlapping_kmers_in_rep += 1
+          file_output_analysis.write(str(num_overlapping_kmers_in_rep)+"\n")
+          #If greater than 50% of the k overlapping kmers are part of a kmer pair
+          if num_overlapping_kmers_in_rep/k > 0.5:
+            read_replaced = True
+            edited_read += reverse_complement(rep[reverse_complement(kmer1)])
+            n += 1
+            set_replacements += 1
+            total_replacements += 1
+            j += k
+          else:
+            edited_read += line[j]
+            j += 1
         else:
           edited_read += line[j]
           j += 1
@@ -125,7 +155,7 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
         set_reads_with_replacements += 1
         total_reads_with_replacements += 1
       file_output_numrep.write(str(n)+'\n')
-      #if n>0:
-      #  print(str(n) + " replacements made")
+      ##if n>0:
+      ##  print(str(n) + " replacements made")
       line = edited_read + line[j:]
     file_output_reads.write(line)
