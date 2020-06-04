@@ -2,6 +2,10 @@
 #python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq replacements.txt
 import re
 import sys
+from itertools import groupby
+
+def squish(read):
+  return "".join(x[0] for x in groupby(read))
 
 def reverse_complement(kmer):
   """
@@ -44,13 +48,13 @@ def prioritize_kmers(kmer1, kmer2):
     assert A == B_rc < B == A_rc 
 
 #k=24 for beroe data
-k=24
+k=21
 
 #change to 2 for single line multi fasta file, change to 4 for fastq file
-num_lines_per_read = 4
+num_lines_per_read = 2
 
 #how often to update user about progress (1000 for long reads, 10000 for short reads)
-reads_per_set = 10000
+reads_per_set = 1000
 
 #make dictionary of replacements
 rep = dict()
