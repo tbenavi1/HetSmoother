@@ -45,14 +45,14 @@ def prioritize_snp(i, kmer1, kmer2):
 		B_rc = reverse_complement(B)
 		if (A < B < B_rc < A_rc) or (A < B_rc < B < A_rc):
 			if flipped:
-				return (kmer1, kmer2[i])
-			else:
 				return (kmer2, kmer1[i])
+			else:
+				return (kmer1, kmer2[i])
 		if (B_rc < A < A_rc < B) or (B_rc < A_rc < A < B):
 			if flipped:
-				return (kmer2, kmer1[i])
-			else:
 				return (kmer1, kmer2[i])
+			else:
+				return (kmer2, kmer1[i])
 		if (A == B_rc < B == A_rc):
 			continue
 		if (B_rc < A < B < A_rc):
