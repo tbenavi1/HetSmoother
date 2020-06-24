@@ -122,7 +122,7 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 		#If this is the line with the read sequence
 		if i%num_lines_per_read==1:
 			read_len = len(line.strip())
-			#n is the nubmber of replacements made for this read
+			#n is the number of replacements made for this read
 			n = 0
 			#j iterates over the read
 			j = 0
