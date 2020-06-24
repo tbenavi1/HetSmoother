@@ -57,8 +57,14 @@ def prioritize_kmers(kmer1, kmer2):
 #k=24 for beroe data
 k=21
 
-#change to 2 for single line multi fasta file, change to 4 for fastq file
-num_lines_per_read = 4
+#set number of lines per read for input read file
+if sys.argv[2].endswith(('.fq','.fastq')):
+  num_lines_per_read = 4
+elif sys.argv[2].endswith(('.fa', '.fasta')):
+  num_lines_per_read = 2
+else:
+  print('Input read file must be an unzipped fastq or fasta file. The file name must end with .fa, .fasta, .fq, or .fastq')
+  exit()
 
 #how often to update user about progress (1000 for long reads, 10000 for short reads)
 reads_per_set = 1000
