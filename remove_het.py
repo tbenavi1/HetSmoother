@@ -85,7 +85,7 @@ if sys.argv[2].endswith(('.fq','.fastq')):
 	print('Input read file is a fastq file.')
 elif sys.argv[2].endswith(('.fa', '.fasta')):
 	num_lines_per_read = 2
-  print('Input read file is a fasta file.')
+	print('Input read file is a fasta file.')
 else:
 	print('Input read file must be an unzipped fastq or fasta file. The file name must end with .fa, .fasta, .fq, or .fastq')
 	sys.exit()
