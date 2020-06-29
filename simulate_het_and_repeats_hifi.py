@@ -213,9 +213,9 @@ def add_het(first_genome, het_level):
 #		if x%10000==0:
 #			print(str(x/len(nums)*100) + "%")
 		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
-		kmer1 = first_genome[i-10:i+11]
-		kmer2 = new_genome[i-10:i+11]
-		priority = prioritize_snp(10, kmer1, kmer2)
+		kmer1 = first_genome[max(0,i-10):i+11]
+		kmer2 = new_genome[max(0,i-10):i+11]
+		priority = prioritize_snp(i-max(0, i-10), kmer1, kmer2)
 		if priority == 0:
 			mat_nums.append(i)
 		elif priority == 1:

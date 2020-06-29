@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-#remove_het.py takes an unzipped fasta (single line per sequence) or fastq file and a list of kmer pairs (with up to two SNPs different) as input. It reads in the list of kmer pairs first and prioritizes how to edit the SNPs. Then, it reads the fasta/fastq file line by line and edits the SNPs accordingly. It also produces a text file which records how many changes were made for each read.
-#python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq replacements.txt
+#remove_het.py takes an unzipped fasta (single line per sequence) or fastq file and a list of kmer pairs (with up to two SNPs different) as input. It reads in the list of kmer pairs first and prioritizes how to edit the SNPs. Then, it reads the fasta/fastq file line by line and edits the SNPs accordingly. It also produces text files which record how many changes were made for each read and the locations of the changes for each read.
+#python remove_het.py kmer_pairs.tsv input_reads.fastq edited_reads.fastq num_replacements.txt loc_replacements.txt
 import sys
 from collections import defaultdict
 
@@ -106,7 +106,7 @@ with open(sys.argv[1], 'r') as file_kmer_pairs:
 print("Kmer pairs loaded")
 
 print("replacing reads")
-with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_output_reads, open(sys.argv[4], 'w') as file_output_numrep:
+with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_output_reads, open(sys.argv[4], 'w') as file_output_numrep, open(sys.argv[5], 'w') as file_output_rep:
 	total_replacements = 0
 	total_reads_with_replacements = 0
 	set_replacements = 0
@@ -130,6 +130,7 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 			m = -1
 			edited_read = ""
 			read_replaced = False
+			replacement_locations = []
 			while j < read_len - k + 1:
 				kmer1 = line[j:j+k]
 				#if need to make a replacement
@@ -144,6 +145,7 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 							set_replacements += 1
 							total_replacements += 1
 							m += len(replacement)
+							replacement_locations.append(str(location+j))
 					j += 1
 				else:
 					if j > m:
@@ -154,5 +156,6 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 				set_reads_with_replacements += 1
 				total_reads_with_replacements += 1
 			file_output_numrep.write(str(n)+'\n')
+			file_output_rep.write(",".join(replacement_locations)+'\n')
 			line = edited_read + line[m+1:]
 		file_output_reads.write(line)
