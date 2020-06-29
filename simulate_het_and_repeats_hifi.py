@@ -207,8 +207,8 @@ def add_het(first_genome, het_level):
 		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
 		kmer1 = first_genome[i-10:i+11]
 		kmer2 = new_genome[i-10:i+11]
-		priority = prioritize_snp(10, kmer1, kmer2):
-		if priority == 0
+		priority = prioritize_snp(10, kmer1, kmer2)
+		if priority == 0:
 			mat_nums.append(i)
 		elif priority == 1:
 			pat_nums.append(i)
@@ -257,7 +257,7 @@ def add_repeats(sequence, repeat_rate, spread):
 
 #####################################
 #Main chunk
-if sys.argv[10] == "0": #We aren't given a fasta file to use as a template
+if sys.argv[9] == "0": #We aren't given a fasta file to use as a template
 	mat_genome = weighted_string(genome_size,gc)
 else: #We are given a copycat genome! 
 	print("Using this as a template: "+copy_cat_genome)
