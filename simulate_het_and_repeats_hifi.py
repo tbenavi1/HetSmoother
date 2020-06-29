@@ -157,6 +157,13 @@ def random_string_exclude(char):
 		new_char = random.choice("ACTG")
 	return new_char
 
+def reverse_complement(kmer):
+  """
+  Assumes kmers are upper case.
+  """
+  complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N'}
+  return "".join(complement[base] for base in reversed(kmer))
+
 def prioritize_snp(i, kmer1, kmer2):
 	window = -1
 	while True:
