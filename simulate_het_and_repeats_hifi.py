@@ -197,7 +197,7 @@ def add_het(first_genome, het_level):
 	#Adds the het randomly  
 	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)) )	
 	mat_nums = []
-  pat_nums = []
+	pat_nums = []
 	new_genome = first_genome
 #	x = 0
 	for i in nums:
@@ -207,13 +207,13 @@ def add_het(first_genome, het_level):
 		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
 		kmer1 = first_genome[i-10:i+11]
 		kmer2 = new_genome[i-10:i+11]
-    priority = prioritize_snp(10, kmer1, kmer2):
-    if priority == 0
+		priority = prioritize_snp(10, kmer1, kmer2):
+		if priority == 0
 			mat_nums.append(i)
 		elif priority == 1:
 			pat_nums.append(i)
-    else:
-      print("het change at position " + str(i) + " is ambigious.")
+		else:
+			print("het change at position " + str(i) + " is ambigious.")
 	print("added het")
 	return new_genome, mat_nums, pat_nums
 	
@@ -306,10 +306,10 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 		this_read = reverse_comp(this_read)
 	
 	#Find where the het was added. There is totally an esier way, but for now this works well enough.
-  if which_genome == "mat":
+	if which_genome == "mat":
 		read_het_locations = find_het(mat_het_is_here, len(this_read), random_number, rc_or_c)
-  else:
-    read_het_locations = find_het(pat_het_is_here, len(this_read), random_number, rc_or_c)
+	else:
+		read_het_locations = find_het(pat_het_is_here, len(this_read), random_number, rc_or_c)
 
 	#Finally, add error to each read. 
 	this_read = add_errors(this_read, err_rate) 
