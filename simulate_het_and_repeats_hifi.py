@@ -104,12 +104,12 @@ def add_errors(string, err_rate): #Will want to add errors to the reads. This wi
 def find_het(het_is_here, read_length, starting_position, rc_or_c):
 	#There totally must be an easier way to do this. But this is sufficient for now 
 	het_loc_for_read = ""
-	y = [x for x in het_is_here if starting_position < x < (starting_position+read_length)]
+	y = [x for x in het_is_here if starting_position <= x < (starting_position+read_length)]
 	
 	if rc_or_c == 1:
-		z = [(read_length - (x-starting_position)) for x in y]
+		z = [(read_length-1 - (x-starting_position)) for x in y]
 	else:
-		z = [x-starting_position-1 for x in y]
+		z = [x-starting_position for x in y]
 	
 	for x in z:
 		het_loc_for_read = het_loc_for_read  + str(x) + ","
@@ -157,25 +157,72 @@ def random_string_exclude(char):
 		new_char = random.choice("ACTG")
 	return new_char
 
+def prioritize_snp(i, kmer1, kmer2):
+	window = -1
+	while True:
+		window += 1
+		flipped = False
+		A = kmer1[i-window:i+window+1]
+		B = kmer2[i-window:i+window+1]
+		if len(A) != 2*window+1:
+			return
+		if A > B:
+			flipped = True
+			A, B = B, A
+		A_rc = reverse_complement(A)
+		B_rc = reverse_complement(B)
+		if (A < B < B_rc < A_rc) or (A < B_rc < B < A_rc):
+			if flipped:
+				return 1
+			else:
+				return 0
+		if (B_rc < A < A_rc < B) or (B_rc < A_rc < A < B):
+			if flipped:
+				return 0
+			else:
+				return 1
+		if (A == B_rc < B == A_rc):
+			continue
+		if (B_rc < A < B < A_rc):
+			if flipped:
+				return 1
+			else:
+				return 0
+		if flipped:
+			return 0
+		else:
+			return 1
+
 def add_het(first_genome, het_level): 
 	#Adds the het randomly  
 	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)) )	
+	mat_nums = []
+  pat_nums = []
 	new_genome = first_genome
 #	x = 0
 	for i in nums:
 #		x = x + 1
 #		if x%10000==0:
 #			print(str(x/len(nums)*100) + "%")
-		new_genome = new_genome[:(i-1)] + random_string_exclude(new_genome[i-1]) + new_genome[i:]
+		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
+		kmer1 = first_genome[i-10:i+11]
+		kmer2 = new_genome[i-10:i+11]
+    priority = prioritize_snp(10, kmer1, kmer2):
+    if priority == 0
+			mat_nums.append(i)
+		elif priority == 1:
+			pat_nums.append(i)
+    else:
+      print("het change at position " + str(i) + " is ambigious.")
 	print("added het")
-	return new_genome, nums
+	return new_genome, mat_nums, pat_nums
 	
 def add_het_evenly(first_genome, het_level):
 	#This time we aren't going to distribute the het randomly. This time it will be even. 
 	new_genome = first_genome
 	nums = list(range(0,(len(first_genome))))[(int(100 / het_level)-1)::int(100 / het_level)]
 	for i in nums:
-		new_genome = new_genome[:(i-1)] + random_string_exclude(new_genome[i-1]) + new_genome[i:]
+		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
 	return new_genome, nums
 
 def add_repeats(sequence, repeat_rate, spread):
@@ -223,12 +270,14 @@ mat_genome = mat_genome[:genome_size]
 
 #Add het
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
-	pat_genome, het_is_here = add_het(mat_genome, het)
+	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
 elif (het != 0.0) and (random_het == 0): #We want to evenly dist the het
 	pat_genome, het_is_here = add_het_evenly(mat_genome, het)
 else: 
 	pat_genome = mat_genome
 	het_is_here = []
+	mat_het_is_here = []
+	pat_het_is_here = []
 
 #We want to have a copy of the mat and pat actual genome (as a reference)
 out_mat.write(mat_genome)
@@ -256,8 +305,11 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 		rc = "reverse_compliment"
 		this_read = reverse_comp(this_read)
 	
-	#Find where the het was added. There is totally an esier way, but for now this works well enough. 
-	read_het_locations = find_het(het_is_here, len(this_read), random_number, rc_or_c)
+	#Find where the het was added. There is totally an esier way, but for now this works well enough.
+  if which_genome == "mat":
+		read_het_locations = find_het(mat_het_is_here, len(this_read), random_number, rc_or_c)
+  else:
+    read_het_locations = find_het(pat_het_is_here, len(this_read), random_number, rc_or_c)
 
 	#Finally, add error to each read. 
 	this_read = add_errors(this_read, err_rate) 
