@@ -202,7 +202,8 @@ def prioritize_snp(i, kmer1, kmer2):
 
 def add_het(first_genome, het_level): 
 	#Adds the het randomly  
-	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)) )	
+	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)) )
+	nums.sort()
 	mat_nums = []
 	pat_nums = []
 	new_genome = first_genome
