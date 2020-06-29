@@ -27,9 +27,9 @@ err_rate = float(sys.argv[7]) #This also needs to be a percentage (so "1" would 
 spread=1
 repeats = float(sys.argv[8]) #This means there will be X % of the genome that is repetative 
 copy_cat_genome = sys.argv[9]
-out = open("fastas/simulation.chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[7] + "." + sys.argv[6] + ".err" + sys.argv[8] + ".repeats" + sys.argv[9] + ".fasta", "w")
-out_mat = open("genomes/mat_genome_chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[7] +  "."  + sys.argv[6]  + ".err" + sys.argv[8] + ".repeats" + sys.argv[9] + ".txt", "w")
-out_pat = open("genomes/pat_genome_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[7] +  "." + sys.argv[6]  + ".err" + sys.argv[8] + ".repeats" + sys.argv[9] + ".txt", "w")
+out = open("simulation.chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".fasta", "w")
+out_mat = open("mat_genome_chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "."  + "rc"  + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
+out_pat = open("pat_genome_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
 
 def find(ch1, ch2,string1):
     pos = []
