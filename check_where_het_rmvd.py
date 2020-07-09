@@ -7,8 +7,8 @@ import sys
 # python ./check_where_het_rmvd.py het_rmvd_loc_test.txt ~/Desktop/smooth_het/simulation.chr20.gs27981280.cov30.het0.rs10000.random_het1.gc-1.rc.err1.repeats0.fasta ~/Desktop/smooth_het/loc_files/loc_replacements_simulation.gs27981280_cov30_het0_rs10000_random_het1_rc_k21_gc-1_err1_repeats0.txt
 
 out = open(sys.argv[1], "w")
-out_all_het = open(sys.argv[2], "w")
-out_missed_het = open(sys.argv[3], "w")
+out_all_het = open(sys.argv[2], "w") # bed file with the list of all het sites 
+out_missed_het = open(sys.argv[3], "w") #bed file with the list of the missed 
 
 with open(sys.argv[4]) as f: #Fasta file
 	all_het_spots = []
