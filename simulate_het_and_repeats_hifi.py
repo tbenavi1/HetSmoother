@@ -30,6 +30,16 @@ copy_cat_genome = sys.argv[9]
 out = open("simulation.chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".fasta", "w")
 out_mat = open("mat_genome_chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "."  + "rc"  + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
 out_pat = open("pat_genome_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
+out_het=open("het_loc_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
+
+
+print("Genome size: " + str(genome_size))
+print("Coverage: " + str(coverage))
+print("read size: " + str(read_size))
+print("Random het: " + str(random_het))
+print("Het: " + str(het))
+print("GC: " + str(gc))
+print("Error rate: " + str(err_rate))
 
 def find(ch1, ch2,string1):
     pos = []
@@ -40,6 +50,7 @@ def find(ch1, ch2,string1):
 
 def copycat(copy_cat_genome, gs, gc):
 	#Use a provided genome as a template 
+	print("Using the template")
 	copy_cat = ""
 	with open(copy_cat_genome, encoding="utf8", errors='ignore') as f: 
 		print("Opening template genome")
@@ -90,16 +101,23 @@ def copycat(copy_cat_genome, gs, gc):
 						print(str((gc_content*100)))
 				gc_content = (mat_genome.count("C")+mat_genome.count("G"))/(len(mat_genome))
 
+
+
 	print("Done with GC addition")
 	return mat_genome
 
 def add_errors(string, err_rate): #Will want to add errors to the reads. This will be on a per-read basis
-	read_w_errors=string
+	read_w_errors=list(string)
+	#read_w_errors=string
 	nums = random.sample(range(0,len(string)), int((err_rate/100)*len(string)))
-	for i in nums:
-		read_w_errors = read_w_errors[:(i-1)] + random_string_exclude(read_w_errors[i-1]) + read_w_errors[i:]
+	read_err_loc = ""
 	
-	return read_w_errors
+	for i in nums:
+		read_w_errors[i] = random_string_exclude(read_w_errors[i])
+		#read_w_errors = read_w_errors[:(i)] + random_string_exclude(read_w_errors[i]) + read_w_errors[i+1:]
+		read_err_loc = read_err_loc + str(i) + ","
+	#return read_w_errors, read_err_loc
+	return "".join(read_w_errors), read_err_loc
 
 def find_het(het_is_here, read_length, starting_position, rc_or_c):
 	#There totally must be an easier way to do this. But this is sufficient for now 
@@ -206,15 +224,19 @@ def add_het(first_genome, het_level):
 	nums.sort()
 	mat_nums = []
 	pat_nums = []
-	new_genome = first_genome
-#	x = 0
+	#new_genome = first_genome
+	new_genome = list(first_genome) #= first_genome
+	x = 0
 	for i in nums:
-#		x = x + 1
-#		if x%10000==0:
-#			print(str(x/len(nums)*100) + "%")
-		new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
+		x = x + 1
+		if x%10000==0:
+			print(str(x/len(nums)*100) + "%")
+		#####new_genome = new_genome + first_genome[i]
+		new_genome[i] = random_string_exclude(new_genome[i]) 
+		#new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
 		kmer1 = first_genome[max(0,i-10):i+11]
-		kmer2 = new_genome[max(0,i-10):i+11]
+		#kmer2 = new_genome[max(0,i-10):i+11]
+		kmer2 = "".join(new_genome[max(0,i-10):i+11])
 		priority = prioritize_snp(i-max(0, i-10), kmer1, kmer2)
 		if priority == 0:
 			mat_nums.append(i)
@@ -223,7 +245,8 @@ def add_het(first_genome, het_level):
 		else:
 			print("het change at position " + str(i) + " is ambigious.")
 	print("added het")
-	return new_genome, mat_nums, pat_nums
+	#return new_genome, mat_nums, pat_nums
+	return "".join(new_genome), mat_nums, pat_nums
 	
 def add_het_evenly(first_genome, het_level):
 	#This time we aren't going to distribute the het randomly. This time it will be even. 
@@ -279,6 +302,8 @@ mat_genome = mat_genome[:genome_size]
 #Add het
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
 	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
+	#print(mat_het_is_here)
+	#print(pat_het_is_here)
 elif (het != 0.0) and (random_het == 0): #We want to evenly dist the het
 	pat_genome, het_is_here = add_het_evenly(mat_genome, het)
 else: 
@@ -294,8 +319,11 @@ out_pat.write(pat_genome)
 #Calculate the number of reads that we'll need to make 
 number_reads = (genome_size * coverage) / read_size
 
+l = 0
 for i in range(0,int(number_reads)): #This is where we make the reads. 
 	#Pick a random place to start 
+	if i%1000 == 0:
+		print(str(i/int(number_reads)*100) + "%")
 	random_number = random.randint(0,genome_size)
 	#read_length = 
 	read_het_locations = "" #Keeping track of where we add the het. 
@@ -320,14 +348,27 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 		read_het_locations = find_het(pat_het_is_here, len(this_read), random_number, rc_or_c)
 
 	#Finally, add error to each read. 
-	this_read = add_errors(this_read, err_rate) 
-
+	this_read, read_err_loc = add_errors(this_read, err_rate) 
+	if len(this_read) != 10000:
+		print("Found one!")
+		print("read_"+ str(i))
+		print("random_number: " + str(random_number))
+		print("read length: " + str(len(this_read)))
+		print("This read: " + this_read)
 	#write this in a fasta file
 	#The name for the read will include the read #, whether it is from the mat or pat,
 	#Whether it is the complimemt or reverse, and the het locations
-	out.write(">read_"+str(i) + "|" + which_genome + "|" + rc +  "|" + str(read_het_locations) + "|" + "\n")
+	out.write(">read_"+str(i) + "|"+ str(random_number) + "|"  + which_genome + "|" + rc +  "|" + str(read_het_locations) + "|" + str(read_err_loc) + "\n")
 	out.write(this_read + "\n")
 
+for i in mat_het_is_here:
+	out_het.write(str(i) + ",")
+out_het.write("\n")
+for i in pat_het_is_here:
+	out_het.write(str(i) + ",")
+out_het.write("\n")
+
+out_het.close()
 out.close()
 out_mat.close()
 out_pat.close()
