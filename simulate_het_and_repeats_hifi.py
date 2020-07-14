@@ -16,6 +16,7 @@ import statistics
 import numpy as np
 import scipy.stats as stats
 from math import floor
+from collection import defaultdict
 
 genome_size = int(sys.argv[1]) #1000000
 coverage = int(sys.argv[2]) #40
@@ -235,6 +236,51 @@ def get_kmer_pair_locations(het_locations, k, genome_size):
 							m2.append(i)
 	return m1, a1, m2, a2
 
+def snp_is_editable(mode, overlapping_snps, i, k):
+	if mode == "m1":
+		if (len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2)):
+			return True
+		else:
+			return False
+	if mode == "a1":
+		if len(overlapping_snps) == 1:
+			return True
+		else:
+			return False
+	if mode == "m2":
+		if ((len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2))) or ((len(overlapping_snps) == 2) and (any([(overlapping_snps[0]==i+floor(k/2)-floor((g+1)/2)) and (overlapping_snps[1]==overlapping_snps[0]+g) for g in range(1,k)]))):
+			return True
+		else:
+			return False
+	if mode == "a2":
+		if (len(overlapping_snps)==1) or (len(overlapping_snps)==2):
+			return True
+		else:
+			return False
+
+#this function is for the genome level
+def get_editable_snp_genome_locations(het_locations, k, genome_size):
+	"""m1 for middle one away
+	a1 for any one away
+	m2 for middle two away
+	a2 for any two away"""
+	modes = ["m1", "a1", "m2", "a2"]
+	results = defaultdict(list)
+	for mode in modes:
+		for het_location in het_locations:
+			#for each kmer overlapping the snp
+			for i in range(max(0, het_location-k+1), min(genome_size-k+1, het_location+1)):
+				overlapping_snps = [position for position in range(i, i+k) if position in het_locations]
+				#print(overlapping_snps)
+				if snp_is_editable(mode, overlapping_snps, i, k):
+					results[mode].append(het_location)
+					break
+	m1 = results["m1"]
+	a1 = results["a1"]
+	m2 = results["m2"]
+	a2 = results["a2"]
+	return m1, a1, m2, a2
+
 #this function is for the read level
 def get_editable_snp_locations(read_start, read_het_locations, read_err_locations, k, read_size, genome_het_location_to_radius, read_sequence, rep, mode):
 	results = []
@@ -388,7 +434,7 @@ mat_genome = mat_genome[:genome_size]
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
 	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
 	het_is_here = sort(mat_het_is_here+pat_het_is_here)
-	m1, a1, m2, a2 = get_kmer_pair_locations(het_is_here, 21, genome_size) #assume k = 21
+	m1, a1, m2, a2 = get_editable_snp_genome_locations(het_is_here, 21, genome_size) #assume k = 21
   with open('track2.m1.bed', 'w') as f:
     for num in m1:
       f.write(f"chr20\t{num}\t{num+1}\n")
