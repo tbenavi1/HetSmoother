@@ -7,7 +7,7 @@
 #Arg 6: Percent GC, must be between 0-100 (ex. 50) 
 #Arg 7: Error rate, must be between 0-100 (ex. 1 for 1% error in the reads)
 #Arg 8: Repeat rate, must be between 0-100 (ex. 2 for 2% repeats)
-#Arg 9: Path to a template genome (must be single line fasta file with no "N" or "n")
+#Arg 9: Path to a template genome (must be single line fasta file with no "N" or "n"). Set as "0" if you don't want to provide a template genome.
 
 import csv
 import sys
@@ -15,6 +15,7 @@ import random
 import statistics
 import numpy as np
 import scipy.stats as stats
+from math import floor
 
 genome_size = int(sys.argv[1]) #1000000
 coverage = int(sys.argv[2]) #40
@@ -32,7 +33,6 @@ out_mat = open("mat_genome_chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".he
 out_pat = open("pat_genome_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
 out_het=open("het_loc_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
 
-
 print("Genome size: " + str(genome_size))
 print("Coverage: " + str(coverage))
 print("read size: " + str(read_size))
@@ -41,12 +41,12 @@ print("Het: " + str(het))
 print("GC: " + str(gc))
 print("Error rate: " + str(err_rate))
 
-def find(ch1, ch2,string1):
-    pos = []
-    for i in range(len(string1)):
-        if ch1 == string1[i] or ch2 == string1[i]:
-            pos.append(i)
-    return pos        
+def find(ch1, ch2, string1):
+	pos = []
+	for i in range(len(string1)):
+		if ch1 == string1[i] or ch2 == string1[i]:
+			pos.append(i)
+	return pos
 
 def copycat(copy_cat_genome, gs, gc):
 	#Use a provided genome as a template 
@@ -61,7 +61,7 @@ def copycat(copy_cat_genome, gs, gc):
 				copy_cat = copy_cat + line
 	#Take the first X base pairs from the template to use 	
 	mat_genome = copy_cat[:gs]
-	
+
 	#Option to change the amount of GC 
 	#The main issue with this is it could break up repeats within the template genome. 
 	if int(gc) != -1:
@@ -101,8 +101,6 @@ def copycat(copy_cat_genome, gs, gc):
 						print(str((gc_content*100)))
 				gc_content = (mat_genome.count("C")+mat_genome.count("G"))/(len(mat_genome))
 
-
-
 	print("Done with GC addition")
 	return mat_genome
 
@@ -110,6 +108,7 @@ def add_errors(string, err_rate): #Will want to add errors to the reads. This wi
 	read_w_errors=list(string)
 	#read_w_errors=string
 	nums = random.sample(range(0,len(string)), int((err_rate/100)*len(string)))
+	nums.sort()
 	read_err_loc = ""
 	
 	for i in nums:
@@ -134,38 +133,22 @@ def find_het(het_is_here, read_length, starting_position, rc_or_c):
 	
 	return het_loc_for_read
 
-def reverse_comp(string):
-	reverse = string[::-1]
-	rc = ""
-	for i in reverse:
-		if i == "A":
-			rc = rc + "T"
-		elif i == "T":
-			rc = rc + "A"
-		elif i == "C":
-			rc = rc + "G"
-		elif i == "G":
-			rc = rc + "C"
-		elif i == "N":
-			rc = rc + "N"
-	return rc
-
-def random_string(len):
-	#Self explainatory 
+def random_string(length):
+	#Self explanatory
 	string = ""
-	for i in range (0, len):
+	for i in range(length):
 		nuc = random.choice("ACTG")
-		string = string + nuc
+		string += nuc
 	return string
 
-def weighted_string(len, gc):
-	#Like random strin, but will randomly choose from a string that contains a specified amount
+def weighted_string(length, gc):
+	#Like random_string, but will randomly choose from a string that contains a specified amount
 	#of Gs and Cs
 	ref = "C"*int(gc*100) + "G"*int(gc*100) + "A"*(100-int(gc*100)) + "T"*(100-int(gc*100))
 	string = ""
-	for i in range (0, len):
+	for i in range(length):
 		nuc = random.choice(ref)
-		string = string + nuc
+		string += nuc
 	return string
 
 def random_string_exclude(char):
@@ -175,12 +158,12 @@ def random_string_exclude(char):
 		new_char = random.choice("ACTG")
 	return new_char
 
-def reverse_complement(kmer):
+def reverse_complement(string):
   """
-  Assumes kmers are upper case.
+  Assumes characters of string are upper case.
   """
   complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N'}
-  return "".join(complement[base] for base in reversed(kmer))
+  return "".join(complement[base] for base in reversed(string))
 
 def prioritize_snp(i, kmer1, kmer2):
 	window = -1
@@ -218,14 +201,116 @@ def prioritize_snp(i, kmer1, kmer2):
 		else:
 			return 1
 
+#this function is for the genome level
+def get_kmer_pair_locations(het_locations, k, genome_size):
+	"""m1 for middle one away
+	a1 for any one away
+	m2 for middle two away
+	a2 for any two away"""
+	m1 = []
+	a1 = []
+	m2 = []
+	a2 = []
+	last_position_checked = -1
+	for het_location in het_locations:
+		#for each kmer overlapping the snp
+		for i in range(max(0, het_location-k+1), min(genome_size-k+1, het_location+1)):
+			#if we haven't already checked this position
+			if i > last_position_checked:
+				last_position_checked = i
+				overlapping_snps = [position for position in range(i, i+k) if position in het_locations]
+				#print(overlapping_snps)
+				if len(overlapping_snps) == 1:
+					a1.append(i)
+					a2.append(i)
+					overlapping_snp = overlapping_snps[0]
+					if overlapping_snp == i+floor(k/2):
+						m1.append(i)
+						m2.append(i)
+				if len(overlapping_snps) == 2:
+					a2.append(i)
+					overlapping_snp1, overlapping_snp2 = overlapping_snps
+					for g in range(1, k):
+						if (overlapping_snp1 == i+floor(k/2)-floor((g+1)/2)) and (overlapping_snp2 == overlapping_snp1+g):
+							m2.append(i)
+	return m1, a1, m2, a2
+
+#this function is for the read level
+def get_editable_snp_locations(read_start, read_het_locations, read_err_locations, k, read_size, genome_het_location_to_radius, read_sequence, rep, mode):
+	results = []
+	uneditable_by_error = []
+	uneditable_by_density = []
+	uneditable_by_ambiguity = []
+	uneditable_by_pair = []
+	#a1 = []
+	#m2 = []
+	#a2 = []
+	for read_het_location in read_het_locations:
+		#m1_flag = False
+		#a1_flag = False
+		#m2_flag = False
+		#a2_flag = False
+		snp_editable = False
+		uneditable_by_error_flag = False
+		uneditable_by_density_flag = False
+		uneditable_by_ambiguity_flag = False
+		uneditable_by_pair_flag = False
+		for i in range(max(0, read_het_location-k+1), min(read_size-k+1, read_het_location+1)):
+			overlapping_errors = [position for position in range(i, i+k) if position in read_err_locations]
+			#If there are any overlapping errors, go to next window
+			if overlapping_errors:
+				uneditable_by_error_flag = True
+				continue
+			#Note: there will always be at least one overlapping_snp in overlapping_snps below
+			overlapping_snps = [position for position in range(i, i+k) if position in read_het_locations]
+			#If the snp density is uneditable under the given mode, go to next window
+			if (mode == "m1") and ((len(overlapping_snps)!=1) or (overlapping_snps[0]!=i+floor(k/2))):
+				uneditable_by_density_flag = True
+				continue
+			if (mode == "a1") and (len(overlapping_snps)!=1):
+				uneditable_by_density_flag = True
+				continue
+			if (mode == "m2") and [[(len(overlapping_snps)!=1) or (overlapping_snps[0]!=i+floor(k/2))] and [(len(overlapping_snps)!=2) or all([(overlapping_snps[0]!=i+floor(k/2)-floor((g+1)/2)) or (overlapping_snps[1]!=overlapping_snps[0]+g) for g in range(1,k)])]]:
+				uneditable_by_density_flag = True
+				continue
+			if (mode == "a2") and ((len(overlapping_snps)!=1) and (len(overlapping_snps)!=2)):
+				uneditable_by_density_flag = True
+				continue
+			genome_het_location = read_start + read_het_location
+			radius = genome_het_location_to_radius[genome_het_location]
+			#If the snp is ambiguous, go to next window
+			if (read_het_location-radius < i) or (read_het_location+radius > i+k-1):
+				uneditable_by_ambiguity_flag = True
+				continue
+			#If the kmer is not in the kmer pair, go to next window
+			if read_sequence[i:i+k] not in rep:
+				uneditable_by_pair_flag = True
+				continue
+			#If we get this far, then the snp is editable
+			snp_editable = True
+			results.append(read_het_location)
+			break
+		if not snp_editable:
+			if uneditable_by_error_flag:
+				uneditable_by_error.append(read_het_location)
+			if uneditable_by_density_flag:
+				uneditable_by_density.append(read_het_location)
+			if uneditable_by_ambiguity_flag:
+				uneditable_by_ambiguity.append(read_het_location)
+			if uneditable_by_pair_flag:
+				uneditable_by_pair.append(read_het_location)
+	return results, uneditable_by_error, uneditable_by_density, uneditable_by_ambiguity, uneditable_by_pair 
+
 def add_het(first_genome, het_level): 
 	#Adds the het randomly  
-	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)) )
+	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)))
 	nums.sort()
+	with open('nums.bed', 'w') as f:
+		for num in nums:
+			f.write(f"chr20\t{num}\t{num+1}\n")
 	mat_nums = []
 	pat_nums = []
-	#new_genome = first_genome
-	new_genome = list(first_genome) #= first_genome
+	new_genome = list(first_genome)
 	x = 0
 	for i in nums:
 		x = x + 1
@@ -234,7 +319,8 @@ def add_het(first_genome, het_level):
 		#####new_genome = new_genome + first_genome[i]
 		new_genome[i] = random_string_exclude(new_genome[i]) 
 		#new_genome = new_genome[:i] + random_string_exclude(new_genome[i]) + new_genome[i+1:]
-		kmer1 = first_genome[max(0,i-10):i+11]
+		#kmer1 = first_genome[max(0,i-10):i+11]
+		kmer1 = "".join(first_genome[max(0,i-10):i+11])
 		#kmer2 = new_genome[max(0,i-10):i+11]
 		kmer2 = "".join(new_genome[max(0,i-10):i+11])
 		priority = prioritize_snp(i-max(0, i-10), kmer1, kmer2)
@@ -272,7 +358,6 @@ def add_repeats(sequence, repeat_rate, spread):
 	nums = random.sample(range(0,len(sequence)), spread) 
 	#Now, let's go through and replace them
 	for i in nums:
-		
 		mer_len=1 #Only adding homopolymers for now 
 		# Make the mer
 		mer = repeat_seq[i:(i+mer_len)]
@@ -334,14 +419,14 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 		this_read = pat_genome[random_number:(random_number + read_size)]
 		which_genome = "pat"
 	
-	#Decide if we will use the reverse compliment or not 
+	#Decide if we will use the reverse complement or not 
 	rc_or_c = random.randint(0,1)
-	rc="compliment"
+	rc="original"
 	if rc_or_c == 1:
-		rc = "reverse_compliment"
-		this_read = reverse_comp(this_read)
+		rc = "reverse_complement"
+		this_read = reverse_complement(this_read)
 	
-	#Find where the het was added. There is totally an esier way, but for now this works well enough.
+	#Find where the het was added. There is totally an easier way, but for now this works well enough.
 	if which_genome == "mat":
 		read_het_locations = find_het(mat_het_is_here, len(this_read), random_number, rc_or_c)
 	else:
@@ -356,8 +441,9 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 		print("read length: " + str(len(this_read)))
 		print("This read: " + this_read)
 	#write this in a fasta file
-	#The name for the read will include the read #, whether it is from the mat or pat,
-	#Whether it is the complimemt or reverse, and the het locations
+	#The name for the read will include the read #, the forward starting location of the read (or forward ending position of the reverse complement read, 
+	#whether it is from the mat or pat,
+	#Whether it is the original or reverse complement strand, the het locations, and the error locations
 	out.write(">read_"+str(i) + "|"+ str(random_number) + "|"  + which_genome + "|" + rc +  "|" + str(read_het_locations) + "|" + str(read_err_loc) + "\n")
 	out.write(this_read + "\n")
 
@@ -372,8 +458,3 @@ out_het.close()
 out.close()
 out_mat.close()
 out_pat.close()
-
-
-
-
-
