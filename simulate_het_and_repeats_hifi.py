@@ -305,7 +305,7 @@ def add_het(first_genome, het_level):
 	#Adds the het randomly  
 	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)))
 	nums.sort()
-	with open('nums.bed', 'w') as f:
+	with open('track1.bed', 'w') as f:
 		for num in nums:
 			f.write(f"chr20\t{num}\t{num+1}\n")
 	mat_nums = []
@@ -387,6 +387,20 @@ mat_genome = mat_genome[:genome_size]
 #Add het
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
 	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
+	het_is_here = sort(mat_het_is_here+pat_het_is_here)
+	m1, a1, m2, a2 = get_kmer_pair_locations(het_is_here, 21, genome_size) #assume k = 21
+  with open('track2.m1.bed', 'w') as f:
+    for num in m1:
+      f.write(f"chr20\t{num}\t{num+1}\n")
+  with open('track2.a1.bed', 'w') as f:
+    for num in a1:
+      f.write(f"chr20\t{num}\t{num+1}\n")
+  with open('track2.m2.bed', 'w') as f:
+    for num in m2:
+      f.write(f"chr20\t{num}\t{num+1}\n")
+  with open('track2.a2.bed', 'w') as f:
+    for num in a2:
+      f.write(f"chr20\t{num}\t{num+1}\n")
 	#print(mat_het_is_here)
 	#print(pat_het_is_here)
 elif (het != 0.0) and (random_het == 0): #We want to evenly dist the het
