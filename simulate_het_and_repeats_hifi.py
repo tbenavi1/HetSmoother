@@ -16,7 +16,7 @@ import statistics
 import numpy as np
 import scipy.stats as stats
 from math import floor
-from collection import defaultdict
+from collections import defaultdict
 
 genome_size = int(sys.argv[1]) #1000000
 coverage = int(sys.argv[2]) #40
@@ -145,7 +145,8 @@ def random_string(length):
 def weighted_string(length, gc):
 	#Like random_string, but will randomly choose from a string that contains a specified amount
 	#of Gs and Cs
-	ref = "C"*int(gc*100) + "G"*int(gc*100) + "A"*(100-int(gc*100)) + "T"*(100-int(gc*100))
+	#ref = "C"*int(gc*100) + "G"*int(gc*100) + "A"*(100-int(gc*100)) + "T"*(100-int(gc*100))
+	ref = "C"*int(gc) + "G"*int(gc) + "A"*int(100-gc) + "T"*int(100-gc)
 	string = ""
 	for i in range(length):
 		nuc = random.choice(ref)
@@ -375,7 +376,10 @@ def add_het(first_genome, het_level):
 		elif priority == 1:
 			pat_nums.append(i)
 		else:
-			print("het change at position " + str(i) + " is ambigious.")
+			print("het change at position " + str(i) + " is ambiguous.")
+			f = open('ambiguous_positions.txt', 'a')
+			f.write(str(i)+'\n')
+			f.close()
 	print("added het")
 	#return new_genome, mat_nums, pat_nums
 	return "".join(new_genome), mat_nums, pat_nums
@@ -433,20 +437,38 @@ mat_genome = mat_genome[:genome_size]
 #Add het
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
 	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
-	het_is_here = sort(mat_het_is_here+pat_het_is_here)
+	het_is_here = sorted(mat_het_is_here+pat_het_is_here)
 	m1, a1, m2, a2 = get_editable_snp_genome_locations(het_is_here, 21, genome_size) #assume k = 21
-  with open('track2.m1.bed', 'w') as f:
-    for num in m1:
-      f.write(f"chr20\t{num}\t{num+1}\n")
-  with open('track2.a1.bed', 'w') as f:
-    for num in a1:
-      f.write(f"chr20\t{num}\t{num+1}\n")
-  with open('track2.m2.bed', 'w') as f:
-    for num in m2:
-      f.write(f"chr20\t{num}\t{num+1}\n")
-  with open('track2.a2.bed', 'w') as f:
-    for num in a2:
-      f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('track2.m1.bed', 'w') as f:
+		for num in m1:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('track2.a1.bed', 'w') as f:
+		for num in a1:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('track2.m2.bed', 'w') as f:
+		for num in m2:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('track2.a2.bed', 'w') as f:
+		for num in a2:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	m1, a1, m2, a2 = get_kmer_pair_locations(het_is_here, 21, genome_size) #assume k = 21
+	with open('num_maximum_kmer_pairs.txt', 'w') as f:
+		f.write(str(len(m1))+'\n')
+		f.write(str(len(a1))+'\n')
+		f.write(str(len(m2))+'\n')
+		f.write(str(len(a2))+'\n')
+	with open('trackp.m1.bed', 'w') as f:
+		for num in m1:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('trackp.a1.bed', 'w') as f:
+		for num in a1:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('trackp.m2.bed', 'w') as f:
+		for num in m2:
+			f.write(f"chr20\t{num}\t{num+1}\n")
+	with open('trackp.a2.bed', 'w') as f:
+		for num in a2:
+			f.write(f"chr20\t{num}\t{num+1}\n")
 	#print(mat_het_is_here)
 	#print(pat_het_is_here)
 elif (het != 0.0) and (random_het == 0): #We want to evenly dist the het
