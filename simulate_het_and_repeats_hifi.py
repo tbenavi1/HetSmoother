@@ -516,7 +516,7 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 
 	#Finally, add error to each read. 
 	this_read, read_err_loc = add_errors(this_read, err_rate) 
-	if len(this_read) != 10000:
+	if len(this_read) != read_size:
 		print("Found one!")
 		print("read_"+ str(i))
 		print("random_number: " + str(random_number))
@@ -525,8 +525,9 @@ for i in range(0,int(number_reads)): #This is where we make the reads.
 	#write this in a fasta file
 	#The name for the read will include the read #, the forward starting location of the read (or forward ending position of the reverse complement read, 
 	#whether it is from the mat or pat,
-	#Whether it is the original or reverse complement strand, the het locations, and the error locations
-	out.write(">read_"+str(i) + "|"+ str(random_number) + "|"  + which_genome + "|" + rc +  "|" + str(read_het_locations) + "|" + str(read_err_loc) + "\n")
+	#Whether it is the original or reverse complement strand, the het locations, the error locations
+	#and the read length
+	out.write(">read_"+str(i) + "|"+ str(random_number) + "|"  + which_genome + "|" + rc +  "|" + str(read_het_locations) + "|" + str(read_err_loc) + "|" + str(len(this_read)) + "\n")
 	out.write(this_read + "\n")
 
 for i in mat_het_is_here:
