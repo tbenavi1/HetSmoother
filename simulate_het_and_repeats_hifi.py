@@ -214,13 +214,14 @@ def get_kmer_pair_locations(het_locations, k, genome_size):
 	m2 = []
 	a2 = []
 	last_position_checked = -1
+	set_het_locations = set(het_locations)
 	for het_location in het_locations:
 		#for each kmer overlapping the snp
 		for i in range(max(0, het_location-k+1), min(genome_size-k+1, het_location+1)):
 			#if we haven't already checked this position
 			if i > last_position_checked:
 				last_position_checked = i
-				overlapping_snps = [position for position in range(i, i+k) if position in het_locations]
+				overlapping_snps = [position for position in range(i, i+k) if position in set_het_locations]
 				#print(overlapping_snps)
 				if len(overlapping_snps) == 1:
 					a1.append(i)
@@ -267,11 +268,12 @@ def get_editable_snp_genome_locations(het_locations, k, genome_size):
 	a2 for any two away"""
 	modes = ["m1", "a1", "m2", "a2"]
 	results = defaultdict(list)
+	set_het_locations = set(het_locations)
 	for mode in modes:
 		for het_location in het_locations:
 			#for each kmer overlapping the snp
 			for i in range(max(0, het_location-k+1), min(genome_size-k+1, het_location+1)):
-				overlapping_snps = [position for position in range(i, i+k) if position in het_locations]
+				overlapping_snps = [position for position in range(i, i+k) if position in set_het_locations]
 				#print(overlapping_snps)
 				if snp_is_editable(mode, overlapping_snps, i, k):
 					results[mode].append(het_location)
