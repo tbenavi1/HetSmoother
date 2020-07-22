@@ -11,7 +11,7 @@ def reverse_complement(kmer):
 	complement = {'A':'T', 'C':'G', 'G':'C', 'T':'A', 'N':'N'}
 	return "".join(complement[base] for base in reversed(kmer))
 
-def get_snp_locations(kmer1, kmer2, k):
+def get_snp_locations(kmer1, kmer2, k, already_flipped=False):
 	"""
 	Assumes kmers have up to two SNPS different. Also accounts for the
 	possibility that the kmers may pair only if one them is noncanonical.
@@ -25,8 +25,16 @@ def get_snp_locations(kmer1, kmer2, k):
 				if kmer1[i+1:] == kmer2[i+1:]:
 					return kmer2, locations
 				else:
-					return get_snp_locations(kmer1, reverse_complement(kmer2), k)
+					if already_flipped:
+						print('kmer 1: ' + kmer1)
+						print('kmer 2: ' + kmer2)
+						sys.exit('kmer pairs file is malformed, kmer pair has more than 2 SNPs')
+					return get_snp_locations(kmer1, reverse_complement(kmer2), k, True)
 			already_found_first = True
+	if not locations:
+		print('kmer 1: ' + kmer1)
+		print('kmer 2: ' + kmer2)
+		sys.exit('kmer pairs file is malformed, kmer pair has no SNPs')
 	return kmer2, locations
 
 def prioritize_snp(i, kmer1, kmer2):
@@ -76,6 +84,12 @@ def prioritize_kmers(kmer1, kmer2, k):
 			prioritize_kmers_results.insert(0, (reverse_complement(kmer), k-1-i, reverse_complement(snp)))
 	return prioritize_kmers_results
 
+def are_low_complexity(kmer1, kmer2, k):
+	threshold = int(k/2)
+	if kmer1.count("A") >= threshold or kmer1.count("T") >= threshold or kmer2.count("A") >= threshold or kmer2.count("T") >= threshold or kmer1.count("C") >= threshold or kmer1.count("G") >= threshold or kmer2.count("C") >= threshold or kmer2.count("G") >= threshold:
+		return True
+	return False
+
 #k=24 for beroe data
 k=21
 
@@ -100,9 +114,11 @@ print("Loading kmer pairs")
 with open(sys.argv[1], 'r') as file_kmer_pairs:
 	for line in file_kmer_pairs:
 		kmer1, kmer2 = line.strip().split('\t')
-		results = prioritize_kmers(kmer1, kmer2, k)
-		for kmer, location, snp in results:
-			rep[kmer].append((location, snp))
+		#if not are_low_complexity(kmer1, kmer2, k):
+		if True:
+			results = prioritize_kmers(kmer1, kmer2, k)
+			for kmer, location, snp in results:
+				rep[kmer].append((location, snp))
 print("Kmer pairs loaded")
 
 print("replacing reads")
@@ -135,11 +151,16 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 				kmer1 = line[j:j+k]
 				#if need to make a replacement
 				if kmer1 in rep:
+					if len(rep[kmer1]) > 2:
+						print(rep[kmer1])
 					read_replaced = True
 					for location, snp in rep[kmer1]:
 						#If the location of the snp on the read is past where we have already edited
 						if location + j > m:
+							print(location+j)
+							print(kmer1)
 							replacement = line[m+1:location+j]+snp
+							print(replacement)
 							edited_read += replacement
 							n += 1
 							set_replacements += 1

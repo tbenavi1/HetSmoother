@@ -1,5 +1,5 @@
 import sys
-#python check_where_het_rmvd.py file.fasta loc_replacements.txt track2.mode.bed track3.mode.bed track.ue.mode.bed
+#python check_where_het_rmvd.py file.fasta loc_replacements.txt track2.mode.bed track3.mode.bed track.ue.mode.bed num_ue_mode.txt num_uu_mode.txt
 
 #track4.bed track5.bed track6.bed track7.bed track8.bed
 
@@ -15,9 +15,11 @@ with open(sys.argv[3], "r") as in_track2:
 	for line in in_track2:
 		loc = int(line.strip().split("\t")[1])
 		track2.add(loc)
-
+print('track2 loaded')
 out_track3 = open(sys.argv[4], "w")
 out_track_ue = open(sys.argv[5], "w")
+out_num_ue = open(sys.argv[6], "w")
+out_num_uu = open(sys.argv[7], "w")
 #out_track4 = open(sys.argv[5], "w")
 #out_track5 = open(sys.argv[6], "w")
 #out_track6 = open(sys.argv[7], "w")
@@ -46,23 +48,30 @@ with open(sys.argv[1], "r") as in_fasta, open(sys.argv[2], "r") as in_loc_replac
 			if line2:
 				line2 += ","
 			read_het_spots=line1.split("|")[4].split(",")[:-1]
+			read_err_spots=line1.split("|")[5].split(",")[:-1]
 			edited_read_het_spots=line2.split(",")[:-1]
 			read_name = line1.split("|")[0]
 			read_start = int(line1.split("|")[1])
 			rc = line1.split("|")[3]
-			if rc == "original":
+			if (rc == "original") or (rc == "compliment"):
 				genome_het_spots = set(read_start + int(x) for x in read_het_spots)
 				edited_genome_het_spots = set(read_start + int(x) for x in edited_read_het_spots)
+				genome_err_spots = set(read_start + int(x) for x in read_err_spots)
+				#print(genome_het_spots)
+				#print(edited_genome_het_spots)
 			else:
 				read_size = len(in_fasta.readline().strip()) #added as temporary fix
 				genome_het_spots = set(read_start + read_size - 1 - int(x) for x in read_het_spots)
 				edited_genome_het_spots = set(read_start + read_size - 1 - int(x) for x in edited_read_het_spots)
+				genome_err_spots = set(read_start + read_size - 1 - int(x) for x in read_err_spots)
 			#print(set(track2))
 			#test = set(genome_het_spots) - set(edited_genome_het_spots)
 			#if test:
 			#	print(test)
 			read_track3_het_spots = (genome_het_spots - edited_genome_het_spots) & track2
-			read_track_ue_spots = edited_genome_het_spots - track2
+			read_track_ue_spots = edited_genome_het_spots - (genome_het_spots & track2) - genome_err_spots #added - genome_err_spots
+			out_num_ue.write(str(len(read_track_ue_spots))+'\n')
+			out_num_uu.write(str(len(read_track3_het_spots))+'\n')
 			if read_track_ue_spots:
 				read_name_to_read_track_ue_spots[read_name] = read_track_ue_spots
 			if read_track3_het_spots:
@@ -76,11 +85,15 @@ with open(sys.argv[1], "r") as in_fasta, open(sys.argv[2], "r") as in_loc_replac
 			#	if ele != "":
 			#		out_all_het.write("chr_20\t" + str(int(line.split("|")[1]) + int(ele)) + "\t" + str(int(line.split("|")[1]) + int(ele) + 1) + "\n")
 			#all_err_spots.append(err_spots)
-print(read_name_to_read_track3_het_spots)
-print(read_name_to_read_track_ue_spots)
+out_num_ue.close()
+out_num_uu.close()
+#print(read_name_to_read_track3_het_spots)
+print(sorted(list(read_name_to_read_track_ue_spots['>read_0'])))
+print('writing track3')
 for track3_het_spot in sorted(list(track3_het_spots)):
 	out_track3.write(f"chr20\t{track3_het_spot}\t{track3_het_spot+1}\n")
 out_track3.close()
+print('writing track ue')
 for track_ue_spot in sorted(list(track_ue_spots)):
 	out_track_ue.write(f"chr20\t{track_ue_spot}\t{track_ue_spot+1}\n")
 out_track_ue.close()
