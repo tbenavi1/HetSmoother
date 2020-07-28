@@ -233,9 +233,11 @@ def get_kmer_pair_locations(het_locations, k, genome_size):
 				if len(overlapping_snps) == 2:
 					a2.append(i)
 					overlapping_snp1, overlapping_snp2 = overlapping_snps
-					for g in range(1, k):
-						if (overlapping_snp1 == i+floor(k/2)-floor((g+1)/2)) and (overlapping_snp2 == overlapping_snp1+g):
-							m2.append(i)
+					if overlapping_snp1 == i+floor(k/2) or overlapping_snp2 == i+floor(k/2):
+						m2.append(i)
+					#for g in range(1, k):
+					#	if (overlapping_snp1 == i+floor(k/2)-floor((g+1)/2)) and (overlapping_snp2 == overlapping_snp1+g):
+					#		m2.append(i)
 	return m1, a1, m2, a2
 
 def snp_is_editable(mode, overlapping_snps, i, k):
@@ -250,7 +252,8 @@ def snp_is_editable(mode, overlapping_snps, i, k):
 		else:
 			return False
 	if mode == "m2":
-		if ((len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2))) or ((len(overlapping_snps) == 2) and (any([(overlapping_snps[0]==i+floor(k/2)-floor((g+1)/2)) and (overlapping_snps[1]==overlapping_snps[0]+g) for g in range(1,k)]))):
+		#if ((len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2))) or ((len(overlapping_snps) == 2) and (any([(overlapping_snps[0]==i+floor(k/2)-floor((g+1)/2)) and (overlapping_snps[1]==overlapping_snps[0]+g) for g in range(1,k)]))):
+		if ((len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2))) or ((len(overlapping_snps) == 2) and ((overlapping_snps[0] == i+floor(k/2)) or (overlapping_snps[1] == i+floor(k/2)))):
 			return True
 		else:
 			return False

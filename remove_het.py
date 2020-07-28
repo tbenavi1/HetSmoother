@@ -151,16 +151,16 @@ with open(sys.argv[2], 'r') as file_input_reads, open(sys.argv[3], 'w') as file_
 				kmer1 = line[j:j+k]
 				#if need to make a replacement
 				if kmer1 in rep:
-					if len(rep[kmer1]) > 2:
-						print(rep[kmer1])
+					#if len(rep[kmer1]) > 2:
+					#	print(rep[kmer1])
 					read_replaced = True
 					for location, snp in rep[kmer1]:
 						#If the location of the snp on the read is past where we have already edited
 						if location + j > m:
-							print(location+j)
-							print(kmer1)
+							#print(location+j)
+							#print(kmer1)
 							replacement = line[m+1:location+j]+snp
-							print(replacement)
+							#print(replacement)
 							edited_read += replacement
 							n += 1
 							set_replacements += 1
