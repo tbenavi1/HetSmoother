@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #Makes simulated reads 
 #Arg 1: genome size (ex. 2000000)
 #Arg 2: Coverage (ex. 30 for 30x)
@@ -29,10 +30,16 @@ err_rate = float(sys.argv[7]) #This also needs to be a percentage (so "1" would 
 spread=1
 repeats = float(sys.argv[8]) #This means there will be X % of the genome that is repetative 
 copy_cat_genome = sys.argv[9]
-out = open("simulation.chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".fasta", "w")
-out_mat = open("mat_genome_chr20.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "."  + "rc"  + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
-out_pat = open("pat_genome_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
-out_het=open("het_loc_chr20.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] +  "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt", "w")
+out =     open("simulation.random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".fasta", "w")
+out_mat = open("mat_genome_random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
+out_pat = open("pat_genome_random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
+out_het = open("het_loc_random.gs"    + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
+out_max_kmers = open("max_kmers.gs"   + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
+out_pairs    = open("true_pairs.gs"+    sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".tsv"  , "w") 
+out_pairs_m1 = open("true_pairs_m1.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".tsv"  , "w") 
+out_pairs_a1 = open("true_pairs_a1.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".tsv"  , "w")
+out_pairs_m2 = open("true_pairs_m2.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".tsv"  , "w")
+out_pairs_a2 = open("true_pairs_a2.gs"+ sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".tsv"  , "w")
 
 print("Genome size: " + str(genome_size))
 print("Coverage: " + str(coverage))
@@ -108,8 +115,9 @@ def copycat(copy_cat_genome, gs, gc):
 def add_errors(string, err_rate): #Will want to add errors to the reads. This will be on a per-read basis
 	read_w_errors=list(string)
 	#read_w_errors=string
-	nums = random.sample(range(0,len(string)), int((err_rate/100)*len(string)))
-	nums.sort()
+	#nums = random.sample(range(0,len(string)), int((err_rate/100)*len(string)))
+	nums = get_random_sample(len(string), err_rate/100)
+        #nums.sort()
 	read_err_loc = ""
 	
 	for i in nums:
@@ -240,6 +248,24 @@ def get_kmer_pair_locations(het_locations, k, genome_size):
 					#		m2.append(i)
 	return m1, a1, m2, a2
 
+def get_middle_kmer_pair_locations(het_locations, k, genome_size):
+    m = []
+    for het_location in het_locations:
+        #if the kmer doesn't go past the end of the genomes
+        start = het_location-int((k-1)/2)
+        end = start + (k-1)
+        if start >= 0 and end <= genome_size - 1:
+            m.append(start)
+    return m
+
+def get_kmer_pairs(kmer_pair_locations, mat_genome, pat_genome, k):
+    kmer_pairs = []
+    for kmer_pair_location in kmer_pair_locations:
+        mat_kmer = mat_genome[kmer_pair_location:kmer_pair_location+k]
+        pat_kmer = pat_genome[kmer_pair_location:kmer_pair_location+k]
+        kmer_pairs.append((mat_kmer, pat_kmer))
+    return kmer_pairs
+
 def snp_is_editable(mode, overlapping_snps, i, k):
 	if mode == "m1":
 		if (len(overlapping_snps) == 1) and (overlapping_snps[0] == i+floor(k/2)):
@@ -353,13 +379,18 @@ def get_editable_snp_locations(read_start, read_het_locations, read_err_location
 				uneditable_by_pair.append(read_het_location)
 	return results, uneditable_by_error, uneditable_by_density, uneditable_by_ambiguity, uneditable_by_pair 
 
+def get_random_sample(genome_size, het):
+    population = range(genome_size)
+    return [x for x in population if random.random() <= het]
+
 def add_het(first_genome, het_level): 
 	#Adds the het randomly  
-	nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)))
-	nums.sort()
-	with open('track1.bed', 'w') as f:
-		for num in nums:
-			f.write(f"chr20\t{num}\t{num+1}\n")
+	#nums = random.sample(range(0,len(first_genome)), int((het_level/100)*len(first_genome)))
+	nums = get_random_sample(len(first_genome), het_level/100)
+        #nums.sort()
+	#with open('track1.bed', 'w') as f:
+	#	for num in nums:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
 	mat_nums = []
 	pat_nums = []
 	new_genome = list(first_genome)
@@ -443,37 +474,57 @@ mat_genome = mat_genome[:genome_size]
 if (het != 0.0) and (random_het == 1): #We want to randomly dist the het
 	pat_genome, mat_het_is_here, pat_het_is_here = add_het(mat_genome, het)
 	het_is_here = sorted(mat_het_is_here+pat_het_is_here)
-	m1, a1, m2, a2 = get_editable_snp_genome_locations(het_is_here, 21, genome_size) #assume k = 21
-	with open('track2.m1.bed', 'w') as f:
-		for num in m1:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('track2.a1.bed', 'w') as f:
-		for num in a1:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('track2.m2.bed', 'w') as f:
-		for num in m2:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('track2.a2.bed', 'w') as f:
-		for num in a2:
-			f.write(f"chr20\t{num}\t{num+1}\n")
+	#m1, a1, m2, a2 = get_editable_snp_genome_locations(het_is_here, 21, genome_size) #assume k = 21
+	#with open('track2.m1.bed', 'w') as f:
+	#	for num in m1:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('track2.a1.bed', 'w') as f:
+	#	for num in a1:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('track2.m2.bed', 'w') as f:
+	#	for num in m2:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('track2.a2.bed', 'w') as f:
+	#	for num in a2:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
 	m1, a1, m2, a2 = get_kmer_pair_locations(het_is_here, 21, genome_size) #assume k = 21
-	with open('num_maximum_kmer_pairs.txt', 'w') as f:
-		f.write(str(len(m1))+'\n')
-		f.write(str(len(a1))+'\n')
-		f.write(str(len(m2))+'\n')
-		f.write(str(len(a2))+'\n')
-	with open('trackp.m1.bed', 'w') as f:
-		for num in m1:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('trackp.a1.bed', 'w') as f:
-		for num in a1:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('trackp.m2.bed', 'w') as f:
-		for num in m2:
-			f.write(f"chr20\t{num}\t{num+1}\n")
-	with open('trackp.a2.bed', 'w') as f:
-		for num in a2:
-			f.write(f"chr20\t{num}\t{num+1}\n")
+	m = get_middle_kmer_pair_locations(het_is_here, 21, genome_size)
+	m1_pairs = get_kmer_pairs(m1, mat_genome, pat_genome, 21)
+	a1_pairs = get_kmer_pairs(a1, mat_genome, pat_genome, 21)
+	m2_pairs = get_kmer_pairs(m2, mat_genome, pat_genome, 21)
+	a2_pairs = get_kmer_pairs(a2, mat_genome, pat_genome, 21)
+	m_pairs  = get_kmer_pairs(m,  mat_genome, pat_genome, 21)
+	out_max_kmers.write(str(len(m1))+'\n')
+	out_max_kmers.write(str(len(a1))+'\n')
+	out_max_kmers.write(str(len(m2))+'\n')
+	out_max_kmers.write(str(len(a2))+'\n')
+	#with open('trackp.m1.bed', 'w') as f:
+	#	for num in m1:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('trackp.a1.bed', 'w') as f:
+	#	for num in a1:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('trackp.m2.bed', 'w') as f:
+	#	for num in m2:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	#with open('trackp.a2.bed', 'w') as f:
+	#	for num in a2:
+	#		f.write(f"chr20\t{num}\t{num+1}\n")
+	for m1_pair in m1_pairs:
+		kmer1, kmer2 = m1_pair
+		out_pairs_m1.write(f"{kmer1}\t{kmer2}\n")
+	for a1_pair in a1_pairs:
+		kmer1, kmer2 = a1_pair
+		out_pairs_a1.write(f"{kmer1}\t{kmer2}\n")
+	for m2_pair in m2_pairs:
+		kmer1, kmer2 = m2_pair
+		out_pairs_m2.write(f"{kmer1}\t{kmer2}\n")
+	for a2_pair in a2_pairs:
+		kmer1, kmer2 = a2_pair
+		out_pairs_a2.write(f"{kmer1}\t{kmer2}\n")
+	for m_pair in m_pairs:
+		kmer1, kmer2 = m_pair
+		out_pairs.write(f"{kmer1}\t{kmer2}\n")
 	#print(mat_het_is_here)
 	#print(pat_het_is_here)
 elif (het != 0.0) and (random_het == 0): #We want to evenly dist the het
@@ -546,3 +597,8 @@ out_het.close()
 out.close()
 out_mat.close()
 out_pat.close()
+out_max_kmers.close()
+out_pairs_m1.close()
+out_pairs_a1.close()
+out_pairs_m2.close()
+out_pairs_a2.close()
