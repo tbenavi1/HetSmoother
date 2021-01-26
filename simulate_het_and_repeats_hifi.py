@@ -16,6 +16,7 @@ import random
 import statistics
 import numpy as np
 import scipy.stats as stats
+#import os
 from math import floor
 from collections import defaultdict
 
@@ -30,6 +31,10 @@ err_rate = float(sys.argv[7]) #This also needs to be a percentage (so "1" would 
 spread=1
 repeats = float(sys.argv[8]) #This means there will be X % of the genome that is repetative 
 copy_cat_genome = sys.argv[9]
+
+#working_directory = f"/seq/schatz/tbenavi/simulated_illumina/ERR{err_rate:.1f}_HET{het:.2f}/SIMULATION/"
+#os.chdir(working_directory)
+
 out =     open("simulation.random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".fasta", "w")
 out_mat = open("mat_genome_random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
 out_pat = open("pat_genome_random.gs" + sys.argv[1] + ".cov" + sys.argv[2] + ".het" + sys.argv[4] + ".rs" + sys.argv[3] + ".random_het" + sys.argv[5] + ".gc" + sys.argv[6] + "." + "rc" + ".err" + sys.argv[7] + ".repeats" + sys.argv[8] + ".txt"  , "w")
